@@ -108,7 +108,7 @@ class AlienInvasion:
         """Опускает весь флот и меняет направление флота."""
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
-            self.settings.fleet_direction *= -1
+        self.settings.fleet_direction *= -1
 
     def _update_aliens(self):
         """Обновляет позиции всех пришельцев во флоте."""
