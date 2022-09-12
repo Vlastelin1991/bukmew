@@ -1,6 +1,8 @@
 import sys
 
+from time import sleep
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -20,13 +22,17 @@ class AlienInvasion:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
 
+        pygame.display.set_caption("Alen Invasion")
+
+        # Создание экземпляра для хранения игровой статистики.
+        self.stats = GameStats(self)
+
         self.ship = Ship(self)
 
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
 
         self._create_fleet()
-        pygame.display.set_caption("Alen Invasion")
 
     def run_game(self):
         """Запуск основного цикла игры"""
@@ -110,22 +116,51 @@ class AlienInvasion:
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
 
+    def _ship_hit(self):
+        """Обрабатывает столкновение корабля с пришельцем."""
+        # Уменьшение ships_left.
+
+        self.stats.ships_left -= 1
+
+        # Очистка списков пришельцев и снарядов.
+        self.aliens.empty()
+        self.bullets.empty()
+
+        # Создание нового флота и размещение корабля в центре.
+
+        self._create_fleet()
+        self.ship.center_ship()
+
+        # Пауза.
+        sleep(0.5)
+
     def _update_aliens(self):
         """Обновляет позиции всех пришельцев во флоте."""
         self._check_fleet_edges()
         self.aliens.update()
+
+        # Проверка коллизий "пришелец — корабль".
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
 
     def _update_bullets(self):
         # Удаление старых снарядов вышедших за экран
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
-            print(len(self.bullets))
+        self._check_bullet_alien_collisions()
 
-        # Проверка попаданий в пришельцев.
-        # При обнаружении попадания удалить снаряд и пришельца.
+    def _check_bullet_alien_collisions(self):
+        """Обработка коллизий снарядов с пришельцами."""
+        # Удаление снарядов и пришельцев, участвующих в коллизиях.
         collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, True, True)
+        if not self.aliens:
+            # Уничтожение существующих снарядов и создание нового флота.
+            self.bullets.empty()
+            self._create_fleet()
+
+
 
     def _update_screen(self):
         self.screen.fill(self.settings.bg_color)
