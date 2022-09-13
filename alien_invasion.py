@@ -40,7 +40,7 @@ class AlienInvasion:
     def run_game(self):
         """Запуск основного цикла игры"""
         while True:
-            self._chec_events()
+            self._check_events()
             if self.stats.game_active:
                 self.ship.update()
                 self.bullets.update()
@@ -48,15 +48,23 @@ class AlienInvasion:
                 self._update_aliens()
             self._update_screen()
 
-    def _chec_events(self):
+    def _check_events(self):
         # Отслеживание событий клавиатуры и мыши
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
             elif event.type == pygame.KEYDOWN:
                 self._chec_keydown_event(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+
+    def _check_play_button(self, mouse_pos):
+        """ Запускает новую игру при нажатии клавиши Play"""
+        if self.play_button.rect.collidepoint(mouse_pos):
+            self.stats.game_active = True
 
     def _chec_keydown_event(self, event):
         """Реагирует на нажатие клавиш"""
